@@ -1,0 +1,82 @@
+﻿version: 1.3.16
+cache: true
+
+interface:
+  customWelcome: "Bienvenue sur ton infrastructure IA locale"
+  logo: "https://librechat.axlabs.fr/assets/logo.svg"
+
+endpoints:
+  custom:
+    - name: "Ollama Local"
+      apiKey: "ollama"
+      baseURL: "http://host.docker.internal:11434/v1"
+      models:
+        default:
+          - "qwen3vl-fast"
+        fetch: false
+      titleConvo: true
+      titleModel: "qwen3vl-fast"
+      modelDisplayLabel: "Ollama"
+
+    - name: "OpenRouter"
+      apiKey: "${OPENROUTER_KEY}"
+      baseURL: "https://openrouter.ai/api/v1"
+      models:
+        default:
+          - "nvidia/nemotron-3-super-120b-a12b:free"
+          - "z-ai/glm-5.2:free"
+          - "nvidia/nemotron-3-ultra-550b-a55b:free"
+        fetch: false
+      titleConvo: true
+      titleModel: "nvidia/nemotron-3-super-120b-a12b:free"
+      modelDisplayLabel: "OpenRouter"
+      dropParams:
+        - "stop"
+
+modelSpecs:
+  enforce: false
+  prioritize: true
+  list:
+    - name: "nemotron-3-ultra"
+      label: "Nemotron 3 Ultra"
+      default: true
+      preset:
+        endpoint: "OpenRouter"
+        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+        temperature: 0.6
+        top_p: 0.9
+        max_tokens: 2048
+        promptPrefix: "Tu réponds systématiquement en français. Tu vas droit au but, sans préambule."
+
+    - name: "llama-70b"
+      label: "Llama 3.3 70B"
+      preset:
+        endpoint: "OpenRouter"
+        model: "meta-llama/llama-3.3-70b-instruct"
+        temperature: 0.7
+        promptPrefix: "Tu réponds systématiquement en français. Tu vas droit au but, sans préambule."
+
+    - name: "gemini-flash"
+      label: "Gemini 1.5 Flash"
+      preset:
+        endpoint: "OpenRouter"
+        model: "google/gemini-1.5-flash"
+        temperature: 0.7
+        promptPrefix: "Tu réponds systématiquement en français."
+
+    - name: "qwen-local"
+      label: "Qwen3-VL (local)"
+      preset:
+        endpoint: "Ollama Local"
+        model: "qwen3vl-fast"
+        temperature: 0.7
+
+webSearch:
+  searxngInstanceUrl: "${SEARXNG_INSTANCE_URL}"
+  firecrawlApiKey: "${FIRECRAWL_API_KEY}"
+  jinaApiKey: "${JINA_API_KEY}"
+  searchProvider: "searxng"
+  scraperProvider: "firecrawl"
+  rerankerType: "jina"
+  allowedAddresses:
+    - "searxng:8080"

@@ -1,0 +1,27 @@
+ARG BASE_IMAGE=ghcr.io/danny-avila/librechat-dev:latest
+FROM ${BASE_IMAGE}
+
+USER root
+COPY workspace/branding/ /tmp/branding/
+
+RUN set -e; \
+    cd /app/client/dist; \
+    for f in /tmp/branding/*; do \
+      n=$(basename "$f"); \
+      cp "$f" "assets/$n"; \
+      rm -f "assets/$n.gz" "assets/$n.br"; \
+    done; \
+    cp /tmp/branding/favicon.ico ./favicon.ico; \
+    rm -f favicon.ico.gz favicon.ico.br; \
+    sed -i 's|href="assets/|href="/assets/|g; s|<title>LibreChat</title>|<title>AxLabs Chat</title>|' index.html; \
+    if [ -f manifest.webmanifest ]; then \
+      sed -i 's/"name":"LibreChat"/"name":"AxLabs Chat"/; s/"short_name":"LibreChat"/"short_name":"AxLabs Chat"/' manifest.webmanifest; \
+    fi; \
+    if [ -f sw.js ]; then \
+      sed -i -E 's/(revision:?"?:?)"[a-f0-9]{6,}"/\1"axlabs-'"$(date +%s)"'"/g' sw.js; \
+    fi; \
+    rm -f index.html.gz index.html.br manifest.webmanifest.gz manifest.webmanifest.br sw.js.gz sw.js.br; \
+    chown -R node:node /app/client/dist; \
+    rm -rf /tmp/branding
+
+USER node

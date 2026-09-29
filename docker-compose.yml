@@ -1,0 +1,107 @@
+services:
+
+  #--- Reverse proxy HTTPS ---#
+  traefik:
+    image: traefik:v3
+    container_name: infra-traefik
+    restart: unless-stopped
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.le.acme.email=${ACME_EMAIL}
+      - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.le.acme.dnschallenge.provider=ovh
+      - --certificatesresolvers.le.acme.dnschallenge.resolvers=1.1.1.1:53,8.8.8.8:53
+      - --log.level=INFO
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - OVH_ENDPOINT=${OVH_ENDPOINT}
+      - OVH_APPLICATION_KEY=${OVH_APPLICATION_KEY}
+      - OVH_APPLICATION_SECRET=${OVH_APPLICATION_SECRET}
+      - OVH_CONSUMER_KEY=${OVH_CONSUMER_KEY}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-certs:/letsencrypt
+    networks:
+      - infra-ia
+
+  #--- Application principale ---#
+  librechat:
+    build:
+      context: .
+      dockerfile: Dockerfile.librechat
+    image: axlabs/librechat:branding
+    container_name: librechat
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+      - meilisearch
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.librechat.rule=Host(`librechat.axlabs.fr`)
+      - traefik.http.routers.librechat.entrypoints=websecure
+      - traefik.http.routers.librechat.tls.certresolver=le
+      - traefik.http.routers.librechat.tls.domains[0].main=axlabs.fr
+      - traefik.http.routers.librechat.tls.domains[0].sans=*.axlabs.fr
+      - traefik.http.services.librechat.loadbalancer.server.port=3080
+    env_file:
+      - .env
+    environment:
+      - CONFIG_PATH=/app/librechat.yaml
+      - OPENROUTER_KEY=${OPENROUTER_KEY}
+    volumes:
+      - ./librechat.yaml:/app/librechat.yaml:ro
+      - ./logs:/app/api/logs
+      - ./workspace:/app/uploads
+    networks:
+      - infra-ia
+
+  #--- Recherche web ---#
+  searxng:
+    image: searxng/searxng:latest
+    container_name: infra-searxng
+    restart: unless-stopped
+    volumes:
+      - ./searxng:/etc/searxng
+    environment:
+      - SEARXNG_BASE_URL=http://searxng:8080/
+    networks:
+      - infra-ia
+
+  #--- Base de donnees ---#
+  mongodb:
+    image: mongo:7
+    container_name: infra-mongodb
+    restart: unless-stopped
+    volumes:
+      - ./data/mongo:/data/db
+    command: mongod --noauth
+    networks:
+      - infra-ia
+
+  #--- Moteur de recherche ---#
+  meilisearch:
+    image: getmeili/meilisearch:v1.12
+    container_name: infra-meilisearch
+    restart: unless-stopped
+    environment:
+      - MEILI_HOST=http://meilisearch:7700
+      - MEILI_NO_ANALYTICS=true
+      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
+    volumes:
+      - ./data/meili:/meili_data
+    networks:
+      - infra-ia
+
+networks:
+  infra-ia:
+    driver: bridge
+
+volumes:
+  traefik-certs:

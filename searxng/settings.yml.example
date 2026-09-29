@@ -1,0 +1,11 @@
+﻿use_default_settings: true
+server:
+  secret_key: "CHANGE_ME_openssl_rand_hex_32"
+  limiter: false
+  image_proxy: true
+search:
+  safe_search: 0
+  default_lang: "fr"
+  formats:
+    - html
+    - json

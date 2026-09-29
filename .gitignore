@@ -1,0 +1,19 @@
+# Secrets
+.env
+*.env.local
+
+# Donnees persistantes
+data/
+
+# Sauvegardes
+*.bak*
+
+# Divers
+logs/
+*.log
+Thumbs.db
+.DS_Store
+
+# SearXNG (contient secret_key)
+searxng/settings.yml
+recover/
