@@ -1,4 +1,4 @@
-﻿version: 1.3.16
+version: 1.3.16
 cache: true
 
 interface:
@@ -13,7 +13,8 @@ endpoints:
       models:
         default:
           - "qwen3vl-fast"
-        fetch: false
+          - "qwen3-vl:8b"
+        fetch: true
       titleConvo: true
       titleModel: "qwen3vl-fast"
       modelDisplayLabel: "Ollama"
@@ -23,9 +24,9 @@ endpoints:
       baseURL: "https://openrouter.ai/api/v1"
       models:
         default:
+          - "nvidia/nemotron-3-ultra-550b-a55b:free"
           - "nvidia/nemotron-3-super-120b-a12b:free"
           - "z-ai/glm-5.2:free"
-          - "nvidia/nemotron-3-ultra-550b-a55b:free"
         fetch: false
       titleConvo: true
       titleModel: "nvidia/nemotron-3-super-120b-a12b:free"
@@ -48,21 +49,13 @@ modelSpecs:
         max_tokens: 2048
         promptPrefix: "Tu réponds systématiquement en français. Tu vas droit au but, sans préambule."
 
-    - name: "llama-70b"
-      label: "Llama 3.3 70B"
+    - name: "glm-5-2"
+      label: "GLM 5.2"
       preset:
         endpoint: "OpenRouter"
-        model: "meta-llama/llama-3.3-70b-instruct"
-        temperature: 0.7
+        model: "z-ai/glm-5.2:free"
+        temperature: 0.6
         promptPrefix: "Tu réponds systématiquement en français. Tu vas droit au but, sans préambule."
-
-    - name: "gemini-flash"
-      label: "Gemini 1.5 Flash"
-      preset:
-        endpoint: "OpenRouter"
-        model: "google/gemini-1.5-flash"
-        temperature: 0.7
-        promptPrefix: "Tu réponds systématiquement en français."
 
     - name: "qwen-local"
       label: "Qwen3-VL (local)"
@@ -70,6 +63,7 @@ modelSpecs:
         endpoint: "Ollama Local"
         model: "qwen3vl-fast"
         temperature: 0.7
+        promptPrefix: "Tu réponds systématiquement en français. Tu vas droit au but, sans préambule."
 
 webSearch:
   searxngInstanceUrl: "${SEARXNG_INSTANCE_URL}"
